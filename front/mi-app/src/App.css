@@ -1,0 +1,115 @@
+/* App.css */
+:root {
+  --color-borde: #ff4d4d; /* El naranja-rojo de tu login */
+  --fondo-oscuro: #1a1b1e; /* El gris oscuro de tu login */
+  --fondo-tarjeta: #25262b; /* Un gris un pelín más claro para contraste */
+}
+
+body {
+  background-color: var(--fondo-oscuro) !important;
+  color: white !important;
+  margin: 0;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Sidebar con el estilo del Login */
+.sidebar-boveda {
+  position: fixed;
+  top: 0;
+  left: -280px; /* Escondido */
+  width: 280px;
+  height: 100vh;
+  background-color: var(--fondo-oscuro);
+  border-right: 2px solid var(--color-borde);
+  transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1050;
+  padding: 30px;
+  box-shadow: 10px 0 20px rgba(255, 77, 77, 0.2);
+}
+
+.badge-rol {
+    text-transform: uppercase; /* Esto hace que 'admin' se vea 'ADMIN' */
+    letter-spacing: 1px;
+    color: #ff4d4d; /* El color de tu banner */
+    border: 1px solid #ff4d4d;
+}
+
+.sidebar-boveda.open {
+  left: 0; /* Deslizar hacia adentro */
+}
+
+/* El botón de hamburguesa flotante */
+.btn-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1100;
+  background-color: var(--fondo-tarjeta);
+  border: 1px solid var(--color-borde);
+  color: var(--color-borde);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+}
+
+.boveda-banner p, 
+.text-muted-custom {
+    color: #ffffff !important; /* Forzamos el color blanco */
+    opacity: 0.9;             /* Opcional: un poquito de transparencia para que no brille tanto como el título */
+    font-size: 0.9rem;
+}
+/* Capa de desenfoque para el fondo */
+.blur-active {
+  filter: blur(10px) brightness(0.4);
+  pointer-events: none;
+  transition: 0.4s;
+}
+
+.main-content {
+  transition: 0.4s;
+}
+/* El contenedor que envuelve todo el Dashboard */
+.dashboard-layout {
+  background-color: var(--fondo-oscuro);
+  min-height: 100vh;
+}
+
+/* EL BANNER/TARJETA (Igual a tu Login) */
+.boveda-banner {
+  background-color: var(--fondo-tarjeta);
+  border: 2px solid var(--color-borde);
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);
+  transition: 0.3s;
+}
+
+.boveda-banner:hover {
+  box-shadow: 0 0 25px rgba(255, 77, 77, 0.5);
+}
+
+/* Título estilo Anime */
+.boveda-titulo {
+  color: var(--color-borde);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* El botón rojo del Login */
+.btn-boveda {
+  background-color: var(--color-borde);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  font-weight: bold;
+  width: 100%;
+  transition: 0.3s;
+}
+
+.btn-boveda:hover {
+  background-color: #e64141;
+  transform: scale(1.02);
+}
