@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../App.css';
 
-const Dashboard = ({ user, irALogin, irACargaProd, irATarjetas }) => {
+const Dashboard = ({ user, irALogin, irACargaProd, irATarjeta, irAElimimarprod }) => {
   const [productos, setProductos] = useState([]);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
@@ -64,8 +64,11 @@ const Dashboard = ({ user, irALogin, irACargaProd, irATarjetas }) => {
           {(user?.rol === 'admin' || user?.rol === 'ayudante') && (
             <button className="btn btn-link text-warning text-decoration-none py-3 text-start fw-bold" onClick={irACargaProd}>🛡️ Cargar Productos</button>
           )}
+          <button className="btn btn-link text-white text-decoration-none py-3 text-start" onClick={irALogin}>🚪 Cerrar Sesión</button>
+          {(user?.rol === 'admin') && (
+            <button className="btn-boveda mt-5" onClick={irAElimimarprod}>Eliminar Producto</button>
+          )}
         </div>
-        <button className="btn-boveda mt-5" onClick={irALogin}>SALIR DE LA BÓVEDA</button>
       </aside>
 
       {/* CONTENIDO PRINCIPAL */}

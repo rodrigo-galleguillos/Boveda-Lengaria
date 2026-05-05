@@ -177,6 +177,31 @@ def cargar_productos():
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
+@app.route('/api/eliminarproducto/<int:id_producto>', methods=['DELETE'])
+def eliminar_producto(id_producto):
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        sql_eliminar = "DELETE FROM productos WHERE id = %s"
+        cursor.execute(sql_eliminar, (id_producto,))
+        conn.commit()
+        
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Producto no encontrado"}), 404
+        
+        return jsonify({"message": "Producto eliminado exitosamente"}), 200
+
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error al eliminar: {e}")
+        return jsonify({"error": "Error interno al eliminar"}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
 #--------  -------
 
 # -------- Ruta de configuración especial -------

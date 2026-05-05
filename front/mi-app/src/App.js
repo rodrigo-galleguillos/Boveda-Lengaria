@@ -6,6 +6,7 @@ import Registro from './components/registros';
 import Dashboard from './components/dashboard';
 import CargaProd from './components/cargaprod';
 import Tarjetas from './components/tarjeta';
+import Eliminarprod from './components/eliminarprod';
 
 function App() {
   const [vista, setVista] = useState('login');
@@ -59,6 +60,11 @@ function App() {
       {/* --- PANTALLA: CARGA DE PRODUCTOS --- */}
       {vista === 'cargaprod' && (
         <CargaProd 
+          irAlDashboard={() => setVista('dashboard')} 
+        />
+      )}
+      {vista === 'eliminarprod' && (
+        <Elimimarprod 
           irAlDashboard={() => setVista('dashboard')} 
         />
       )}
