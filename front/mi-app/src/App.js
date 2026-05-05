@@ -64,7 +64,7 @@ function App() {
         />
       )}
       {vista === 'eliminarprod' && (
-        <Elimimarprod 
+        <Eliminarprod 
           irAlDashboard={() => setVista('dashboard')} 
         />
       )}

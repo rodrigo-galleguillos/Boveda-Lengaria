@@ -1,59 +1,86 @@
-const eliminarProducto = async (id) => {
-  // 1. Confirmación (para que no borre sin querer)
-  if (!window.confirm("¿Deseas eliminar esta figura de la bóveda?")) return;
+import React, { useEffect, useState } from "react";
+import '../App.css';
 
-  try {
-    // 2. Fetch con la sintaxis de variables correcta
-    const respuesta = await fetch(`http://127.0.0.1:5000/api/eliminarproducto/${id}`, {
-      method: 'DELETE',
-    });
+const EliminarProd = ({ irADashboard }) => {
+    // 1. Estado para almacenar la lista de figuras
+    const [productos, setProductos] = useState([]);
 
-    if (respuesta.ok) {
-      // 3. Filtrado del estado para que desaparezca de la vista
-      const listaActualizada = productos.filter(p => p.id !== id);
-      setProductos(listaActualizada);
-      
-      alert("✅ Producto eliminado exitosamente");
-      irADashboard(); // Ejecutamos la función para volver
-    } else {
-      alert("❌ Error al eliminar el producto");
-    }
-  } catch (error) {
-    console.error("Error:", error);
-  } finally {
-    setProductoSeleccionado(null);
-  }
+    // 2. Lógica para CARGAR los productos desde Flask al entrar
+    useEffect(() => {
+        const cargarProductos = async () => {
+            try {
+                // Hacemos una petición GET a tu ruta de listado
+                const respuesta = await fetch('http://127.0.0.1:5000/api/productos');
+                if (respuesta.ok) {
+                    const datos = await respuesta.json();
+                    setProductos(datos); // Llenamos el estado con las figuras de la DB
+                } else {
+                    console.error("Error al obtener productos");
+                }
+            } catch (error) {
+                console.error("Error de conexión:", error);
+            }
+        };
 
-  return (
-  <div className="admin-container">
-    <header className="admin-header">
-      <h1>Panel de Control: La Bóveda</h1>
-      <button onClick={irADashboard} className="btn-volver">Volver</button>
-    </header>
+        cargarProductos();
+    }, []); // El array vacío asegura que esto solo pase una vez
 
-    <div className="productos-grid">
-      {productos.length === 0 ? (
-        <p>No hay figuras en la bóveda...</p>
-      ) : (
-        productos.map((producto) => (
-          <div key={producto.id} className="producto-card">
-            {/* Si tenés imagen, podrías poner un <img src={producto.url} /> */}
-            <div className="producto-info">
-              <h3>{producto.nombre}</h3>
-              <p>ID: {producto.id}</p>
-            </div>
+    // 3. Función para ELIMINAR en el Backend y actualizar el Frontend
+    const ejecutarEliminacion = async (id) => {
+        // Confirmación de seguridad
+        if (!window.confirm("¿Estás seguro de que deseas eliminar esta figura de la bóveda?")) return;
+
+        try {
+            const respuesta = await fetch(`http://127.0.0.1:5000/api/eliminarproducto/${id}`, {
+                method: 'DELETE',
+            });
             
-            {/* ESPACIO LÓGICO: Conectá aquí tu función eliminarProducto */}
-            <button 
-              className="btn-eliminar"
-              onClick={() => { /* Tu lógica aquí pasándole el producto.id */ }}
-            >
-              Eliminar Figura
-            </button>
-          </div>
-        ))
-      )}
-    </div>
-  </div>
-);
-}; // <- ¡No te olvides de cerrar esta llave!
+            if (respuesta.ok) {
+                // Actualizamos el estado local filtrando el producto borrado
+                // Esto hace que la tarjeta desaparezca visualmente de inmediato
+                setProductos(prevProductos => prevProductos.filter(p => p.id !== id));
+                alert("✅ Figura eliminada correctamente");
+            } else {
+                alert("❌ No se pudo eliminar el producto en el servidor");
+            }
+        } catch (error) {
+            console.error("Error al conectar con el servidor:", error);
+            alert("❌ Error de red al intentar eliminar");
+        }
+    };
+
+    // 4. Estructura de la interfaz (HTML / JSX)
+    return (
+        <div className="admin-container">
+            <header className="admin-header">
+                <h1>Panel de Control: La Bóveda</h1>
+                <button onClick={irADashboard} className="btn-volver">Volver al Dashboard</button>
+            </header>
+
+            <div className="productos-grid">
+                {productos.length === 0 ? (
+                    <p className="mensaje-vacio">No hay figuras disponibles para eliminar en este momento.</p>
+                ) : (
+                    productos.map((producto) => (
+                        <div key={producto.id} className="producto-card">
+                            <div className="producto-info">
+                                <h3>{producto.nombre}</h3>
+                                <p className="producto-id">ID de Catálogo: {producto.id}</p>
+                            </div>
+                            
+                            {/* Conexión de la lógica con el evento click */}
+                            <button 
+                                className="btn-eliminar"
+                                onClick={() => ejecutarEliminacion(producto.id)}
+                            >
+                                Eliminar Figura
+                            </button>
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default EliminarProd;
