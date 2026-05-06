@@ -1,86 +1,81 @@
 import React, { useEffect, useState } from "react";
 import '../App.css';
 
-const EliminarProd = ({ irADashboard }) => {
-    // 1. Estado para almacenar la lista de figuras
+const EliminarProd = ({ irAlDashboard }) => {
     const [productos, setProductos] = useState([]);
 
-    // 2. Lógica para CARGAR los productos desde Flask al entrar
+    // 1. CARGAMOS LOS PRODUCTOS (Al iniciar el componente)
     useEffect(() => {
-        const cargarProductos = async () => {
-            try {
-                // Hacemos una petición GET a tu ruta de listado
-                const respuesta = await fetch('http://127.0.0.1:5000/api/productos');
-                if (respuesta.ok) {
-                    const datos = await respuesta.json();
-                    setProductos(datos); // Llenamos el estado con las figuras de la DB
-                } else {
-                    console.error("Error al obtener productos");
+        fetch('http://127.0.0.1:5000/api/inicio')
+            .then(res => res.json())
+            .then(data => {
+                // Verificamos que data sea un array antes de guardarlo
+                if (Array.isArray(data)) {
+                    setProductos(data);
                 }
-            } catch (error) {
-                console.error("Error de conexión:", error);
-            }
-        };
+            })
+            .catch(err => console.error("Error al cargar la Bóveda:", err));
+    }, []);
 
-        cargarProductos();
-    }, []); // El array vacío asegura que esto solo pase una vez
-
-    // 3. Función para ELIMINAR en el Backend y actualizar el Frontend
-    const ejecutarEliminacion = async (id) => {
-        // Confirmación de seguridad
-        if (!window.confirm("¿Estás seguro de que deseas eliminar esta figura de la bóveda?")) return;
-
-        try {
-            const respuesta = await fetch(`http://127.0.0.1:5000/api/eliminarproducto/${id}`, {
+    // 2. FUNCIÓN PARA ELIMINAR (Acción del usuario)
+    const ejecutarEliminacion = (id) => {
+        if (window.confirm("¿Estás seguro de que querés borrar esta figura de la Bóveda?")) {
+            fetch(`http://127.0.0.1:5000/api/eliminarproducto/${id}`, {
                 method: 'DELETE',
-            });
-            
-            if (respuesta.ok) {
-                // Actualizamos el estado local filtrando el producto borrado
-                // Esto hace que la tarjeta desaparezca visualmente de inmediato
-                setProductos(prevProductos => prevProductos.filter(p => p.id !== id));
-                alert("✅ Figura eliminada correctamente");
-            } else {
-                alert("❌ No se pudo eliminar el producto en el servidor");
-            }
-        } catch (error) {
-            console.error("Error al conectar con el servidor:", error);
-            alert("❌ Error de red al intentar eliminar");
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Mostramos el mensaje que viene de Flask (éxito o error)
+                alert(data.message || data.error);
+                
+                // 3. ACTUALIZACIÓN OPTIMISTA: Quitamos el producto de la lista visual
+                if (!data.error) {
+                    setProductos(productos.filter(p => p.id !== id));
+                }
+            })
+            .catch(err => console.error("Error en la petición DELETE:", err));
         }
     };
 
-    // 4. Estructura de la interfaz (HTML / JSX)
+    // 4. ESTRUCTURA DE LA INTERFAZ
     return (
         <div className="admin-container">
             <header className="admin-header">
-                <h1>Panel de Control: La Bóveda</h1>
-                <button onClick={irADashboard} className="btn-volver">Volver al Dashboard</button>
+                <h1 className="boveda-titulo">Panel de Control: La Bóveda</h1>
+                {/* Usamos irADashboard que es la prop que entra al componente */}
+                <button onClick={irAlDashboard} className="btn-boveda" style={{width: 'auto'}}>
+                    Volver al Dashboard
+                </button>
             </header>
 
-            <div className="productos-grid">
+            <div className="productos-grid mt-4">
                 {productos.length === 0 ? (
-                    <p className="mensaje-vacio">No hay figuras disponibles para eliminar en este momento.</p>
+                    <p className="text-white">No hay figuras disponibles para eliminar en este momento.</p>
                 ) : (
-                    productos.map((producto) => (
-                        <div key={producto.id} className="producto-card">
-                            <div className="producto-info">
-                                <h3>{producto.nombre}</h3>
-                                <p className="producto-id">ID de Catálogo: {producto.id}</p>
+                    <div className="row">
+                        {productos.map((producto) => (
+                            <div key={producto.id} className="col-md-4 mb-3">
+                                <div className="boveda-banner p-3 d-flex flex-column h-100">
+                                    <div className="producto-info flex-grow-1">
+                                        <h3 className="h5 text-white">{producto.nombre}</h3>
+                                        <p className="text-muted small">ID de Catálogo: {producto.id}</p>
+                                    </div>
+                                    
+                                    <button 
+                                        className="btn btn-danger btn-sm w-100 mt-2"
+                                        onClick={() => ejecutarEliminacion(producto.id)}
+                                    >
+                                        🗑️ Eliminar Figura
+                                    </button>
+                                </div>
                             </div>
-                            
-                            {/* Conexión de la lógica con el evento click */}
-                            <button 
-                                className="btn-eliminar"
-                                onClick={() => ejecutarEliminacion(producto.id)}
-                            >
-                                Eliminar Figura
-                            </button>
-                        </div>
-                    ))
+                        ))}
+                    </div>
                 )}
             </div>
         </div>
     );
 };
+
 
 export default EliminarProd;

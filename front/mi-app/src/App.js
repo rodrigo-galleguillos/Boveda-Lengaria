@@ -52,6 +52,7 @@ function App() {
           user={usuarioLogueado} 
           irALogin={() => setVista('login')}
           irACargaProd={() => setVista('cargaprod')}
+          irAEliminarprod={() => setVista('eliminarprod')}
           // Pasamos la función centralizada
           irATarjetas={verDetalleFigura} 
         />
