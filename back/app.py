@@ -11,6 +11,7 @@ CORS(app)
 
 UPLOAD_FOLDER_IMG = 'static/assets/img'
 UPLOAD_FOLDER_AUDIO = 'static/assets/audio'
+UPLOAD_FOLDER_IMG_BANNER = 'static/assets/img/banners'
 #------- Ruta de configuraciones inicial. -------
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -82,8 +83,9 @@ def inicio():
     if conn:
         cursor = conn.cursor(dictionary=True)
         query = """
-        SELECT p.id, p.nombre, p.precio, p.img, c.tipo, c.nombre AS nombre_categorias, c.path_audio FROM productos p
+        SELECT p.id, p.nombre, p.precio, p.img, c.tipo, c.nombre AS nombre_categorias, c.path_audio FROM productos p 
         INNER JOIN categorias c ON p.fk_categoria_id = c.id
+        ORDER BY id DESC LIMIT 5
         """
         cursor.execute(query)
         productos = cursor.fetchall()
@@ -111,6 +113,77 @@ def cargar_tarjetas(id_figura):
             return jsonify(tarjetas)
         else:
             return jsonify({"error": "Producto no encontrado"}), 404
+
+@app.route('/api/categorias', methods=['GET'])
+def cargar_categorias():
+    conn = get_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT id, nombre, path_audio, img_banner, tipo FROM categorias"
+        cursor.execute(query)
+        categorias = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(categorias)
+    else:
+        return jsonify({"error": "No se pudo conectar a la base de datos"}), 500
+
+@app.route('/api/categorias/nueva', methods=['POST'])
+def nueva_categoria():
+    if request.method == 'OPTIONS':
+        return '', 204
+        
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        # 1. Datos del nuevo Catálogo/Anime
+        nombre = request.form.get("nombre") # Ej: "One Piece"
+        tipo = request.form.get("tipo")     # Ej: "anime"
+        
+        # 2. Archivos para el Banner
+        file_imagen = request.files.get("imagen") 
+        file_audio = request.files.get("audio")
+
+        # Procesar archivos con nombres por defecto si no vienen
+        img_banner = "default_banner.png"
+        if file_imagen:
+            img_banner = secure_filename(file_imagen.filename)
+            file_imagen.save(os.path.join(UPLOAD_FOLDER_IMG_BANNER, img_banner))
+
+        path_audio = "default_opening.mp3"
+        if file_audio:
+            path_audio = secure_filename(file_audio.filename)
+            file_audio.save(os.path.join(UPLOAD_FOLDER_AUDIO, path_audio))
+
+        # 3. VERIFICACIÓN: Evitar duplicar el banner
+        query_buscar = "SELECT id FROM categorias WHERE nombre = %s"
+        cursor.execute(query_buscar, (nombre,))
+        resultado = cursor.fetchone()
+
+        if resultado:
+            # Si el anime ya existe, no hacemos nada para no romper el catálogo actual
+            return jsonify({"message": f"El catálogo de {nombre} ya existe."}), 400
+        
+        # 4. INSERTAR EL NUEVO CATÁLOGO
+        # Usamos exactamente las columnas de tu imagen: nombre, tipo, path_audio, img_banner
+        query_insertar_cat = """
+            INSERT INTO categorias (nombre, tipo, path_audio, img_banner) 
+            VALUES (%s, %s, %s, %s)
+        """
+        cursor.execute(query_insertar_cat, (nombre, tipo, path_audio, img_banner))
+        
+        conn.commit()
+        return jsonify({"message": f"¡Catálogo de {nombre} creado exitosamente!"}), 201
+
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
 
 @app.route("/api/cargaproductos", methods=['POST', 'OPTIONS'])
 def cargar_productos():
@@ -178,6 +251,7 @@ def cargar_productos():
         if cursor: cursor.close()
         if conn: conn.close()
 
+
 @app.route('/api/eliminarproducto/<int:id_producto>', methods=['DELETE'])
 def eliminar_producto(id_producto):
     conn = None
@@ -186,9 +260,10 @@ def eliminar_producto(id_producto):
         conn = get_connection()
         cursor = conn.cursor()
         
+        # Vamos directo al grano: borrar
         sql_eliminar = "DELETE FROM productos WHERE id = %s"
         cursor.execute(sql_eliminar, (id_producto,))
-        conn.commit()
+        conn.commit() # ¡VITAL para que MySQL guarde el cambio!
         
         if cursor.rowcount == 0:
             return jsonify({"error": "Producto no encontrado"}), 404
@@ -197,8 +272,7 @@ def eliminar_producto(id_producto):
 
     except Exception as e:
         if conn: conn.rollback()
-        print(f"Error al eliminar: {e}")
-        return jsonify({"error": "Error interno al eliminar"}), 500
+        return jsonify({"error": "Error interno"}), 500
     finally:
         if cursor: cursor.close()
         if conn: conn.close()

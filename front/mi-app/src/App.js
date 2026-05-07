@@ -7,6 +7,7 @@ import Dashboard from './components/dashboard';
 import CargaProd from './components/cargaprod';
 import Tarjetas from './components/tarjeta';
 import Eliminarprod from './components/eliminarprod';
+import Catalogo from './components/catalogo';
 
 function App() {
   const [vista, setVista] = useState('login');
@@ -53,12 +54,19 @@ function App() {
           irALogin={() => setVista('login')}
           irACargaProd={() => setVista('cargaprod')}
           irAEliminarprod={() => setVista('eliminarprod')}
+          irACatalogo={() => setVista('catalogo')}
           // Pasamos la función centralizada
           irATarjetas={verDetalleFigura} 
         />
       )}
 
       {/* --- PANTALLA: CARGA DE PRODUCTOS --- */}
+      {vista === 'catalogo' && (
+        <Catalogo 
+          user={usuarioLogueado}
+          irADashboard={() => setVista('dashboard')} 
+        />
+      )}
       {vista === 'cargaprod' && (
         <CargaProd 
           irAlDashboard={() => setVista('dashboard')} 
