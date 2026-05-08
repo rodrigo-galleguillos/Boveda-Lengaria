@@ -95,6 +95,25 @@ def inicio():
     else:
         return jsonify({"error": "No se pudo conectar a la base de datos"}), 500
 
+@app.route('/api/tarjetas_de_categoria/<int:id_categoria>')
+def cargar_tarjetas_de_categoria(id_categoria):
+    conn = get_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        query = """
+        SELECT p.id, p.nombre, p.precio, p.img, descripcion, stock, c.tipo, c.nombre AS nombre_categorias FROM productos p
+        INNER JOIN categorias c ON p.fk_categoria_id = c.id
+        WHERE fk_categoria_id = %s
+        """
+        cursor.execute(query, (id_categoria,))
+        tarjetas = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        if tarjetas:
+            return jsonify(tarjetas)
+        else:
+            return jsonify({"error": "No se encontraron productos para esta categoría"}), 404
+
 @app.route('/api/tarjetas/<int:id_figura>')
 def cargar_tarjetas(id_figura):
     conn = get_connection ()
