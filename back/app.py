@@ -139,6 +139,37 @@ def cargar_tarjetas(id_figura):
         else:
             return jsonify({"error": "Producto no encontrado"}), 404
 
+@app.route('/api/actualizarstock/<int:id_producto>', methods=['PUT'])
+def actualizar_stock(id_producto):
+    datos = request.get_json()
+    nuevo_stock = datos.get('stock')
+
+    if nuevo_stock is None:
+        return jsonify({"error": "El campo 'stock' es obligatorio"}), 400
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        
+        sql_actualizar = "UPDATE productos SET precio = %s, stock = %s, descripcion = %s, img = %s, path_audio_producto = %s  WHERE id = %s"
+        cursor.execute(sql_actualizar, (nuevo_stock, id_producto))
+        conn.commit() # ¡No olvides guardar los cambios!
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Producto no encontrado"}), 404
+        
+        return jsonify({"message": "Stock actualizado exitosamente"}), 200
+
+    except Exception as e:
+        if conn: conn.rollback() # Si algo falla, deshacemos para no romper la DB
+        print(f"Error al actualizar stock: {e}")
+        return jsonify({"error": "Error interno al actualizar stock"}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 @app.route('/api/categorias', methods=['GET'])
 def cargar_categorias():
     conn = get_connection()

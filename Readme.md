@@ -1,49 +1,74 @@
-🏛️ La Bóveda Legendaria
-Sistema de Gestión de Figuras Coleccionables (Full Stack)
-Este proyecto es una plataforma integral diseñada para coleccionistas de figuras de anime. Permite gestionar un catálogo completo con funcionalidades de Login, Registro y un Dashboard interactivo con personajes estilo pixel art.
+🏯 La Bóveda Legendaria - Anime Figure Catalog
+Sistema de gestión y catálogo de figuras de anime desarrollado con el stack React (Frontend) y Flask (Backend), utilizando MySQL para la persistencia de datos.
 
-📂 Estructura del Proyecto
-El repositorio está organizado de manera que la lógica de servidor, la interfaz de usuario y los datos estén desacoplados:
+🛠️ 1. Requisitos Previos (Links de Descarga)
+Es obligatorio instalar las siguientes herramientas oficiales antes de configurar el código:
 
-/fron: Contiene toda la interfaz de usuario desarrollada en React.js.
+Python (v3.10+): Descargar aquí
 
-/back: Servidor API y lógica de negocio programada en Python con Flask.
+Node.js (LTS): Descargar aquí
 
-/database.py: Scripts SQL para la creación y población de la base de datos.
+MySQL Community Installer: Descargar aquí
 
-🛠️ Guía de Instalación y Ejecución
-Para poner en marcha el proyecto localmente, seguí estos tres pasos:
+IMPORTANTE: Al instalar MySQL, elige la opción "Developer Default".
 
-1. Base de Datos 🗄️
-Abrí tu gestor de base de datos (como MySQL Workbench) e importá el archivo db_boveda_legendaria.sql ubicado en la carpeta /db. Este script se encargará de crear la base de datos tienda_anime junto con las tablas y los datos de prueba necesarios para que el catálogo no esté vacío al iniciar.
+AVISO: Este proyecto NO es compatible con Microsoft SQL Server. Solo funciona con MySQL 8.0 o superior.
 
-2. Backend (Servidor API) 🐍
-Navegá a la carpeta del servidor mediante la terminal. Es recomendable crear un entorno virtual para mantener limpias las dependencias.
+🗄️ 2. Configuración de la Base de Datos (MySQL)
+Estado del Servicio: Abre "Servicios" en Windows y verifica que MySQL80 esté "En ejecución".
 
+Importar el Script:
+
+Abre MySQL Workbench y entra en tu instancia local (puerto 3306).
+
+Ve a Administration > Data Import/Restore.
+
+Selecciona Import from Self-Contained File y busca el archivo .sql del proyecto.
+
+Crea un nuevo esquema (Database) llamado la_boveda y haz clic en Start Import.
+
+🐍 3. Configuración del Backend (Flask)
+Desde una terminal en la carpeta /backend, ejecuta estos comandos en orden:
+
+A. Entorno Virtual (venv)
 Bash
-cd backend
+# 1. Crear el entorno virtual
 python -m venv venv
-.\venv\Scripts\activate
-pip install -r requirements.txt
-Nota importante: Antes de ejecutar el servidor, revisá el archivo database.py para verificar que las credenciales de acceso (usuario y contraseña) coincidan con las de tu instancia local de MySQL. Finalmente, iniciá el servicio con: python app.py. El servidor quedará escuchando en [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
-3. Frontend (Interfaz Web) ⚛️
-En una nueva terminal, dirigite a la carpeta de la interfaz y realizá la instalación de los módulos de Node:
+# 2. Activar el entorno (En Windows)
+.\venv\Scripts\activate
+B. Instalación de Librerías (Consola)
+Una vez activado el (venv), instala las dependencias que el código necesita para los import:
 
 Bash
-cd frontend
+# Framework y CORS
+pip install Flask flask-cors
+
+# Conector de Base de Datos
+pip install mysql-connector-python
+⚛️ 4. Configuración del Frontend (React)
+Desde una terminal en la carpeta /frontend, ejecuta:
+
+Instalar módulos base:
+
+Bash
 npm install
-npm start
-La aplicación se abrirá automáticamente en tu navegador en la dirección http://localhost:3000.
+Instalar librerías de funciones:
 
-✨ Características Principales
-Gestión de Inventario: Visualización dinámica de figuras de anime consumiendo una API propia.
+Bash
+npm install axios react-router-dom
+🚀 5. Ejecución del Proyecto
+Debes abrir dos terminales diferentes:
 
-Seguridad: Sistema robusto de autenticación y registro de usuarios.
+Terminal 1 (Backend): Con el venv activo, ejecuta python app.py.
 
-Estética Retro: Sistema de animaciones interactivas utilizando CSS Spritesheets y personajes tipo pixel art.
+Terminal 2 (Frontend): Ejecuta npm start.
 
-Arquitectura Limpia: Separación estricta de responsabilidades entre el frontend y el backend.
+Accede a la app en: http://localhost:3000.
 
-✒️ Autor
-Rodrigo Galleguillos - Backend Developer - GitHub Profile
+⚠️ Solución de Problemas (Triage)
+Error "Unable to connect to 127.0.0.1:3306": Tienes instalado el Workbench pero no el MySQL Server. Reabre el instalador y añade el componente "Server".
+
+Error de Sintaxis SQL: No uses SQL Server Management Studio. El script solo es válido para MySQL.
+
+Error de Librería No Encontrada: Verifica que activaste el entorno virtual antes de ejecutar el servidor de Flask.

@@ -71,6 +71,10 @@ const Login = ({ irARegistro, alLoguearse }) => {
             ENTRAR A LA BÓVEDA
           </button>
 
+          <button type="submit" className="btn-boveda mb-3" onClick={irARegistro}>
+            REGISTRARSE
+          </button>
+ 
           <div className="text-center">
             <span 
               className="text-muted small" 
