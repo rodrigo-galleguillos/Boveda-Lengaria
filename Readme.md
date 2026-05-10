@@ -28,7 +28,7 @@ Selecciona Import from Self-Contained File y busca el archivo .sql del proyecto.
 Crea un nuevo esquema (Database) llamado la_boveda y haz clic en Start Import.
 
 🐍 3. Configuración del Backend (Flask)
-Desde una terminal en la carpeta /backend, ejecuta estos comandos en orden:
+Desde una terminal en la carpeta /back, ejecuta estos comandos en orden:
 
 A. Entorno Virtual (venv)
 Crear el entorno: python -m venv venv
@@ -43,7 +43,7 @@ pip install Flask flask-cors
 pip install mysql-connector-python
 
 ⚛️ 4. Configuración del Frontend (React)
-Desde una terminal en la carpeta /frontend, ejecuta:
+Desde una terminal en la carpeta /front, ejecuta:
 
 Instalar módulos base: npm install
 
