@@ -12,6 +12,7 @@ CORS(app)
 UPLOAD_FOLDER_IMG = 'static/assets/img'
 UPLOAD_FOLDER_AUDIO = 'static/assets/audio'
 UPLOAD_FOLDER_IMG_BANNER = 'static/assets/img/banners'
+UPLOAD_FOLDER_AUDIO_BANNER = 'static/assets/audio/banners'
 #------- Ruta de configuraciones inicial. -------
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -83,9 +84,14 @@ def inicio():
     if conn:
         cursor = conn.cursor(dictionary=True)
         query = """
-        SELECT p.id, p.nombre, p.precio, p.img, c.tipo, c.nombre AS nombre_categorias, c.path_audio FROM productos p 
+        SELECT 
+            p.id, p.nombre, p.precio, p.img, 
+            p.path_audio_producto, 
+            c.tipo, c.nombre AS nombre_categorias, 
+            CONCAT('banners/', c.path_audio) AS path_audio_banner 
+        FROM productos p 
         INNER JOIN categorias c ON p.fk_categoria_id = c.id
-        ORDER BY id DESC LIMIT 5
+        ORDER BY p.id DESC LIMIT 5
         """
         cursor.execute(query)
         productos = cursor.fetchall()
@@ -101,7 +107,7 @@ def cargar_tarjetas_de_categoria(id_categoria):
     if conn:
         cursor = conn.cursor(dictionary=True)
         query = """
-        SELECT p.id, p.nombre, p.precio, p.img, descripcion, stock, c.tipo, c.nombre AS nombre_categorias FROM productos p
+        SELECT p.id, p.nombre, p.precio, p.img, p.descripcion, p.stock, p.path_audio_producto, c.tipo, c.nombre AS nombre_categorias FROM productos p
         INNER JOIN categorias c ON p.fk_categoria_id = c.id
         WHERE fk_categoria_id = %s
         """
@@ -120,7 +126,7 @@ def cargar_tarjetas(id_figura):
     if conn:
         cursor = conn.cursor(dictionary=True)
         query = """
-        SELECT p.nombre, p.precio, p.img, descripcion, stock, c.tipo, c.nombre AS nombre_categorias FROM productos p
+        SELECT p.nombre, p.precio, p.img, p.descripcion, p.stock, p.path_audio_producto, c.tipo, c.nombre AS nombre_categorias FROM productos p
         INNER JOIN categorias c ON p.fk_categoria_id = c.id
         WHERE p.id = %s
         """
@@ -175,10 +181,10 @@ def nueva_categoria():
         path_audio = "default_opening.mp3"
         if file_audio:
             path_audio = secure_filename(file_audio.filename)
-            file_audio.save(os.path.join(UPLOAD_FOLDER_AUDIO, path_audio))
+            file_audio.save(os.path.join(UPLOAD_FOLDER_AUDIO_BANNER, path_audio))
 
         # 3. VERIFICACIÓN: Evitar duplicar el banner
-        query_buscar = "SELECT id FROM categorias WHERE nombre = %s"
+        query_buscar = "SELECT id, nombre, CONCAT('banners/', path_audio) AS path_audio, img_banner, tipo FROM categorias WHERE nombre = %s"
         cursor.execute(query_buscar, (nombre,))
         resultado = cursor.fetchone()
 
@@ -223,7 +229,7 @@ def cargar_productos():
         nombre_cat = request.form.get("nombre_cat")
         tipo_cat = request.form.get("tipo_cat")
 
-        # 2. Extraemos archivos (Asegurate que en React sea 'imagen' y 'audio')
+        # 2. Extraemos archivos 
         file_imagen = request.files.get("imagen") 
         file_audio = request.files.get("audio")
 
@@ -245,19 +251,20 @@ def cargar_productos():
         resultado = cursor.fetchone()
 
         if resultado is None:
+            # Si la categoría no existe, no reutilizamos el audio de figura para el banner.
+            # Guardamos un audio de banner por defecto en la categoría y reservamos el audio real para el producto.
             sql_insertar_cat = "INSERT INTO categorias (nombre, tipo, path_audio) VALUES (%s, %s, %s)"
-            cursor.execute(sql_insertar_cat, (nombre_cat, tipo_cat, nombre_audio))
+            cursor.execute(sql_insertar_cat, (nombre_cat, tipo_cat, 'default_opening.mp3'))
             id_categoria = cursor.lastrowid
         else:
             id_categoria = resultado['id']
 
-        # 4. INSERT Corregido (Sin duplicar descripción y usando nombre_imagen)
+        # 4. INSERT Corregido para productos: ahora guardamos path_audio_producto.
         sql_insertar_producto = """
-            INSERT INTO productos (nombre, descripcion, precio, stock, fk_categoria_id, img) 
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO productos (nombre, descripcion, precio, stock, fk_categoria_id, img, path_audio_producto) 
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        # Pasamos las variables correctas
-        cursor.execute(sql_insertar_producto, (nombre, descripcion, precio, stock, id_categoria, nombre_imagen))
+        cursor.execute(sql_insertar_producto, (nombre, descripcion, precio, stock, id_categoria, nombre_imagen, nombre_audio))
         
         conn.commit()
         return jsonify({"message": "Reliquia forjada exitosamente", "img": nombre_imagen}), 201
