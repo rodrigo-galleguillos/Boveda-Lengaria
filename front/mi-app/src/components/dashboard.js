@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../App.css';
 
-const Dashboard = ({ user, irALogin, irACargaProd, irATarjetas, irAEliminarprod, irACatalogo }) => {
+const Dashboard = ({ user, irALogin, irACargaProd, irATarjetas, irAEliminarprod, irACatalogo, irADelegarRoll }) => {
   const [productos, setProductos] = useState([]);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const audioref = useRef(null);
@@ -69,6 +69,9 @@ const Dashboard = ({ user, irALogin, irACargaProd, irATarjetas, irAEliminarprod,
           )}
           {(user?.rol === 'admin') && (
             <button className="btn btn-link text-white text-decoration-none py-3 text-start" onClick={irAEliminarprod}>🗑️ Eliminar Producto</button>
+          )}
+          {(user?.rol === 'admin') && (
+            <button className="btn btn-link text-white text-decoration-none py-3 text-start" onClick={irADelegarRoll}>⚔️ Delegar Roles</button>
           )}
           <button className="btn btn-link text-white text-decoration-none py-3 text-start" onClick={() => { detenerAudio(); irALogin(); }}>🚪 Cerrar Sesión</button>
         </div>

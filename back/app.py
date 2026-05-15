@@ -75,6 +75,21 @@ def registro():
             cursor.close()
         if conn:
             conn.close()
+
+
+@app.route('/api/usuarios', methods=['GET'])
+def obtener_usuarios():
+    conn = get_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT id, nombre, apellido, dni, mail, telefono, pais, provincia, ciudad, rol FROM usuarios"
+        cursor.execute(query)
+        usuarios = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(usuarios)
+    else:
+        return jsonify({"error": "Error de conexión"}), 500
 #-------  -------
 
 # -------- Rutas de Entidad Principal (Figuras) -------
@@ -336,59 +351,68 @@ def eliminar_producto(id_producto):
 #--------  -------
 
 # -------- Ruta de configuración especial -------
-@app.route('/api/datos', methods = ["POST"])
+@app.route('/api/datos', methods=["POST"])
 def cambiar_dato():
-
-    permisosrol = request.json.get("permisosrol")
-    if permisosrol != "admin":
-        return jsonify({"error": "Permisos insuficientes"}), 403
-    datos = request.get_json()
-    
-    # Sacamos el ID para el WHERE y lo quitamos de la bolsa de datos
-    id_usuario = datos.pop('id_usuario', None)
-    
-    if not id_usuario:
-        return jsonify({"error": "ID de usuario obligatorio"}), 400
-
-    if not datos:
-        return jsonify({"mensaje": "No se enviaron campos para modificar"}), 200
-
-    # 2. Construcción Dinámica de la Query
-    columnas_sql = [f"{campo} = %s" for campo in datos.keys()]
-    query = f"UPDATE usuarios SET {', '.join(columnas_sql)} WHERE id = %s"
-    
-    # Los valores son los del JSON filtrado + el ID al final
-    valores = list(datos.values())
-    valores.append(id_usuario)
-
-    # 3. Gestión de la Base de Datos (Cursor y Conexión)
     conn = None
     cursor = None
     try:
+        datos = request.get_json()
+        if not datos:
+            return jsonify({"error": "No se recibieron datos"}), 400
+
+        # 1. Extraer datos de control antes de armar la query
+        admin_pass_recibida = datos.pop("admin_password_confirm", None)
+        permisos = datos.pop("permisosrol", None)
+        id_usuario = datos.pop('id_usuario', None)
+
+        if not id_usuario:
+            return jsonify({"error": "ID de usuario requerido"}), 400
+
         conn = get_connection()
-        cursor = conn.cursor()
+        # Usamos dictionary=True para que admin_db['contrasena'] funcione
+        cursor = conn.cursor(dictionary=True) 
+
+        # 2. VALIDACIÓN DINÁMICA: Buscar la clave del admin actual en la DB
+        cursor.execute("SELECT contrasena FROM usuarios WHERE rol = 'admin' LIMIT 1")
+        admin_db = cursor.fetchone()
+
+        if not admin_db:
+            return jsonify({"error": "No se encontró un administrador en la base de datos"}), 404
+
+        if admin_pass_recibida != admin_db['contrasena']:
+            return jsonify({"error": "Contraseña de administrador incorrecta"}), 401
+
+        # 3. VALIDACIÓN DE PERMISOS FIJOS
+        if permisos != "admin":
+            return jsonify({"error": "Permisos de sistema insuficientes"}), 403
+
+        # 4. CONSTRUCCIÓN DINÁMICA DE LA QUERY
+        if not datos:
+            return jsonify({"mensaje": "No hay campos para actualizar"}), 200
+
+        # 'datos' ahora solo tiene: mail, contrasena o rol
+        columnas_sql = [f"{campo} = %s" for campo in datos.keys()]
+        query = f"UPDATE usuarios SET {', '.join(columnas_sql)} WHERE id = %s"
         
+        valores = list(datos.values())
+        valores.append(id_usuario)
+
+        # 5. EJECUCIÓN
         cursor.execute(query, valores)
-        conn.commit() # ¡Guardamos los cambios físicamente!
+        conn.commit()
         
         return jsonify({
-            "status": "success",
-            "mensaje": f"Usuario {id_usuario} actualizado con éxito",
-            "campos_tocados": list(datos.keys())
+            "status": "success", 
+            "mensaje": "Bóveda sincronizada correctamente",
+            "id_afectado": id_usuario
         }), 200
 
     except Exception as e:
-        if conn:
-            conn.rollback() # Si algo falla, deshacemos para no romper la DB
-        print(f"Error crítico: {e}")
-        return jsonify({"error": "Error interno al actualizar"}), 500
-
+        print(f"Error crítico en la Bóveda: {e}")
+        return jsonify({"error": "Error interno al procesar los datos"}), 500
     finally:
-        # Cerramos para no agotar las conexiones del servidor
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
+        if cursor: cursor.close()
+        if conn: conn.close()
 #--------  -------
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ import CargaProd from './components/cargaprod';
 import Tarjetas from './components/tarjeta';
 import Eliminarprod from './components/eliminarprod';
 import Catalogo from './components/catalogo';
+import DelegarRoll from './components/delegar_roll';
 
 function App() {
   const [vista, setVista] = useState('login');
@@ -55,6 +56,7 @@ function App() {
           irACargaProd={() => setVista('cargaprod')}
           irAEliminarprod={() => setVista('eliminarprod')}
           irACatalogo={() => setVista('catalogo')}
+          irADelegarRoll={() => setVista('delegarroll')}
           // Pasamos la función centralizada
           irATarjetas={verDetalleFigura} 
         />
@@ -85,7 +87,12 @@ function App() {
           irAlDashboard={() => setVista('dashboard')}
         />
       )}
-
+      
+      {vista === 'delegarroll' && (
+        <DelegarRoll 
+          irAlDashboard={() => setVista('dashboard')} 
+        />
+      )}
     </div>
   );
 }
